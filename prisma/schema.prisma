@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model Workflow {
+  id                String              @id @default(cuid())
+  userId            String
+  name              String
+  description       String?
+  definition        String
+  executionPlan     String?
+  creditsCost       Int                 @default(0)
+  status            String
+  cron              String?
+  lastRunAt         DateTime?
+  nextRunAt         DateTime?
+  lastRunId         String?
+  lastRunStatus     String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  WorkflowExecution WorkflowExecution[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model WorkflowExecution {
+  id              String           @id @default(cuid())
+  workflowId      String
+  userId          String
+  trigger         String
+  status          String
+  definition      String           @default("{}")
+  createdAt       DateTime         @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  updatedAt       DateTime         @updatedAt
+  creditsConsumed Int              @default(0)
+  workflow        Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  ExecutionPhase  ExecutionPhase[]
+
+  @@index([workflowId])
+  @@index([userId])
+}
+
+model ExecutionPhase {
+  id                  String            @id @default(cuid())
+  userId              String
+  status              String
+  number              Int
+  node                String
+  name                String
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  inputs              String?
+  outputs             String?
+  creditsCost         String?
+  workflowExecutionId String
+  workflowExecution   WorkflowExecution @relation(fields: [workflowExecutionId], references: [id], onDelete: Cascade)
+  logs                ExecutionLog[]
+
+  @@index([workflowExecutionId])
+  @@index([userId])
+}
+
+model ExecutionLog {
+  id               String         @id @default(cuid())
+  logLevel         String
+  message          String
+  timeStamp        DateTime       @default(now())
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  executionPhaseId String
+  executionPhase   ExecutionPhase @relation(fields: [executionPhaseId], references: [id], onDelete: Cascade)
+
+  @@index([executionPhaseId])
+  @@index([logLevel])
+}
+
+model UserBalance {
+  userId  String @id
+  credits Int    @default(0)
+}
+
+model Credentials {
+  id     String @id @default(cuid())
+  userId String
+  name   String @unique
+  value  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model UserPurchase {
+  id          String   @id @default(cuid())
+  userId      String
+  stripeId    String
+  description String
+  amount      Int
+  currency    String
+  date        DateTime @default(now())
+}
