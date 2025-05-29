@@ -16,7 +16,8 @@ export const getBrowserConfig = () => {
   return {
     args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
     defaultViewport: chromium.defaultViewport,
-    executablePath: chromium.executablePath,
+    executablePath:
+      process.env.CHROME_EXECUTABLE_PATH || chromium.executablePath,
     headless: chromium.headless,
     ignoreHTTPSErrors: true,
   };
@@ -32,10 +33,22 @@ export const createBrowser = async () => {
     });
   }
 
-  return await puppeteer.launch({
-    args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath,
-    headless: chromium.headless,
-  });
+  try {
+    const executablePath =
+      process.env.CHROME_EXECUTABLE_PATH || (await chromium.executablePath);
+
+    if (!executablePath) {
+      throw new Error("Chrome executable path not found");
+    }
+
+    return await puppeteer.launch({
+      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: chromium.headless,
+    });
+  } catch (error) {
+    console.error("Error launching browser:", error);
+    throw error;
+  }
 };

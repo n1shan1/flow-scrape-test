@@ -5,5 +5,5 @@
     }
   },
   "buildCommand": "bun run build",
-  "installCommand": "bun install && bunx puppeteer browsers install chrome"
+  "installCommand": "bun install && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true bunx puppeteer browsers install chrome"
 }
