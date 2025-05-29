@@ -4,6 +4,6 @@
       "maxDuration": 30
     }
   },
-  "buildCommand": "npm run build",
-  "installCommand": "npm install && npx puppeteer browsers install chrome"
+  "buildCommand": "bun run build",
+  "installCommand": "bun install && bunx puppeteer browsers install chrome"
 }
